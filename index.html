@@ -416,7 +416,10 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:#f5f3ef;font-fami
   <div class="screen active" id="s-projects">
     <div class="nav">
       <div class="nav-title" style="text-align:left;flex:1">Projects</div>
-      <div class="nav-right">
+      <div class="nav-right" style="display:flex;gap:8px">
+        <button onclick="clearApiKey()" style="background:none;border:none;cursor:pointer;padding:6px;color:#a09b93">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        </button>
         <button class="pill pill-dark" onclick="openProjModal(null)">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New
@@ -836,7 +839,8 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:#f5f3ef;font-fami
 
 <script>
 // ── API KEY ──────────────────────────────────────
-const API_KEY = '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'; // <-- sem vlož svůj Anthropic API klíč
+// API key loaded from localStorage
+function getApiKey() { return localStorage.getItem('anthropic_api_key') || ''; }
 // ─────────────────────────────────────────────────
 
 // ── STATE ────────────────────────────────────────
@@ -958,8 +962,33 @@ function loadAll() {
 // ── INIT ─────────────────────────────────────────
 loadAll();
 document.getElementById('rDate').value = new Date().toISOString().split('T')[0];
-// Render projects immediately so existing data is visible
-renderProjects();
+
+function saveApiKey() {
+  const key = document.getElementById('apikeyInput').value.trim();
+  if (!key) return;
+  localStorage.setItem('anthropic_api_key', key);
+  show('s-projects');
+  renderProjects();
+}
+
+function checkApiKey() {
+  const key = localStorage.getItem('anthropic_api_key');
+  if (!key) {
+    show('s-apikey');
+  } else {
+    show('s-projects');
+    renderProjects();
+  }
+}
+
+// Add settings button to change API key
+function clearApiKey() {
+  if (!confirm('Reset API key?')) return;
+  localStorage.removeItem('anthropic_api_key');
+  show('s-apikey');
+}
+
+checkApiKey();
 
 // ── NAVIGATION ───────────────────────────────────
 function show(id) {
@@ -1619,7 +1648,7 @@ async function callAI(b64) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
+        'x-api-key': getApiKey(),
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
